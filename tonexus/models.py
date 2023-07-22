@@ -157,7 +157,8 @@ class Message(db.Model):
 
         offset = (page_num - 1) * page_size
         query = cls.query.with_entities(cls.source, cls.destination,
-                                        func.count(cls.msg_id).label('count'))
+                                        func.count(cls.msg_id).label('count')
+                                        ,func.sum(cls.value).label('total'))\
 
         if source:
             query = query.filter(cls.source == source)
