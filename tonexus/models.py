@@ -171,15 +171,11 @@ class Message(db.Model):
         if msg_hash:
             query = query.filter(cls.hash == msg_hash)
 
-        grouped_query = query.group_by(cls.source, cls.destination)\
+        return query.group_by(cls.source, cls.destination)\
                              .order_by(desc('count'))\
                              .limit(page_size)\
                              .offset(offset)\
-                            #  .all()
-
-        print_raw_sql(grouped_query)
-
-        return grouped_query.all()
+                             .all()
 
     @classmethod
     def get_address_total_value(cls, source='', destination=''):
