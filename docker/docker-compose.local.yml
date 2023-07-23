@@ -1,0 +1,12 @@
+version: '3.3'
+services:
+
+  postgres:
+    image: sameersbn/postgresql:14
+    platform: linux/amd64
+    environment: 
+      - DB_USER=foouser
+      - DB_PASS=barpass
+      - DB_NAME=ton_index
+    ports:
+      - 5432:5432
