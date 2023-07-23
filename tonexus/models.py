@@ -7,8 +7,10 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.dialects.postgresql import ARRAY
 
 from tonexus.ext import db
-from tonexus.utils import print_raw_sql
 
+
+# NOTE: The models was migreate from the ton-indexer project (ref: https://github.com/toncenter/ton-indexer/blob/master/indexer/database.py)
+# TODO: Refactor the models to support the local test
 
 @dataclass(init=False)
 class Block(db.Model):

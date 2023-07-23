@@ -3,8 +3,8 @@
 from tonexus.managers import TONManager
 from tests.managers.base import BaseManagerTestCase
 
-# NOTE: Do not the unittest 
-# The unittest run with ton-indexer
+# NOTE: Do not run the unnitest due to lack of integrating with the local PostgreSQL database.
+# The database was highly integrated with ton-indexer(https://github.com/toncenter/ton-indexer)
 
 class TestTONManager(BaseManagerTestCase):
 
