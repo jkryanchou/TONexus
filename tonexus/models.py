@@ -1,7 +1,7 @@
 # -*- coding=utf-8 -*-
 
 from dataclasses import dataclass
-from sqlalchemy import Column, String, Integer, BigInteger, Boolean, Index, Enum, func, desc
+from sqlalchemy import Column, String, Integer, BigInteger, Boolean, Index, Enum, func, desc, distinct
 from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.dialects.postgresql import ARRAY
@@ -152,13 +152,15 @@ class Message(db.Model):
                       Index('messages_index_8', 'out_tx_id'))
 
     @classmethod
-    def get_transactions_accounts(cls, source='', destination='', msg_hash='',
+    def get_transactions_grouped(cls, source='', destination='', msg_hash='',
                                   page_num=1, page_size=100):
 
         offset = (page_num - 1) * page_size
         query = cls.query.with_entities(cls.source, cls.destination,
-                                        func.count(cls.msg_id).label('count')
-                                        ,func.sum(cls.value).label('total'))\
+                                        func.count(cls.msg_id).label('count'),
+                                        func.count(distinct(cls.in_tx_id)).label('in_tx_cnt'),
+                                        func.count(distinct(cls.out_tx_id)).label('out_tx_cnt'),
+                                        (func.sum(cls.value) / 100000000).label('total_value'))
 
         if source:
             query = query.filter(cls.source == source)
@@ -169,11 +171,63 @@ class Message(db.Model):
         if msg_hash:
             query = query.filter(cls.hash == msg_hash)
 
-        return query.group_by(cls.source, cls.destination)\
-                     .order_by(desc('count'))\
-                     .limit(page_size)\
-                     .offset(offset)\
-                     .all()
+        grouped_query = query.group_by(cls.source, cls.destination)\
+                             .order_by(desc('count'))\
+                             .limit(page_size)\
+                             .offset(offset)\
+                            #  .all()
+
+        print_raw_sql(grouped_query)
+
+        return grouped_query.all()
+
+    @classmethod
+    def get_address_total_value(cls, source='', destination=''):
+        query = cls.query
+        if source:
+            query = query.filter(cls.source == source)
+
+        if destination:
+            query = query.filter(cls.destination == destination)
+
+        result = query.group_by(cls.source)\
+                      .with_entities(func.sum(cls.value).label('total_value'))\
+                      .first()
+        return result
+
+    @classmethod
+    def get_top_transaction_address(cls, addr='', direction='send', page_num=1, page_size=100):
+        # FIX: Total Value should not be minus
+        offset = (page_num - 1) * page_size
+
+        if direction == 'send':
+            return cls.query.filter(cls.source == addr)\
+                      .with_entities(
+                         cls.destination.label('address'),
+                         func.sum(cls.value / 100000000).label('total_value'),
+                         func.count(distinct(cls.out_tx_id)).label('tx_cnt'),
+                         func.count(cls.msg_id).label('msg_cnt'),
+                       )\
+                       .group_by(cls.destination)\
+                       .order_by(desc('total_value'))\
+                       .limit(page_size)\
+                       .offset(offset)\
+                       .all()
+
+        # direction = Receive
+        else:
+            return cls.query.filter(cls.destination == addr)\
+                      .with_entities(
+                         cls.source.label('address'),
+                         func.sum(cls.value / 100000000).label('total_value'),
+                         func.count(distinct(cls.in_tx_id)).label('tx_cnt'),
+                         func.count(cls.msg_id).label('msg_cnt'),
+                       )\
+                       .group_by(cls.source)\
+                       .order_by(desc('total_value'))\
+                       .limit(page_size)\
+                       .offset(offset)\
+                       .all()
 
 
 @dataclass(init=False)
