@@ -62,7 +62,7 @@ class TONManager(Singleton):
         ]
 
     def get_grouped_transactions_by_address(self, address='', direction='send', page_num=1, page_size=100):
-        if direction == 'send':
+        if direction == 'Send':
             return [
                 self._to_resp(r) 
                 for r in MessageModel.get_transactions_grouped(address, '', '', page_num, page_size)

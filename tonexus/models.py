@@ -7,6 +7,7 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.dialects.postgresql import ARRAY
 
 from tonexus.ext import db
+from tonexus.utils import print_raw_sql
 
 
 # NOTE: The models was migreate from the ton-indexer project (ref: https://github.com/toncenter/ton-indexer/blob/master/indexer/database.py)
@@ -156,9 +157,9 @@ class Message(db.Model):
     @classmethod
     def get_transactions_grouped(cls, source='', destination='', msg_hash='',
                                   page_num=1, page_size=100):
-
         offset = (page_num - 1) * page_size
-        query = cls.query.with_entities(cls.source, cls.destination,
+        query = cls.query.with_entities(cls.source,
+                                        cls.destination,
                                         func.count(cls.msg_id).label('count'),
                                         func.count(distinct(cls.in_tx_id)).label('in_tx_cnt'),
                                         func.count(distinct(cls.out_tx_id)).label('out_tx_cnt'),
@@ -173,11 +174,15 @@ class Message(db.Model):
         if msg_hash:
             query = query.filter(cls.hash == msg_hash)
 
-        return query.group_by(cls.source, cls.destination)\
+        grouped_query = query.group_by(cls.source, cls.destination)\
                              .order_by(desc('count'))\
                              .limit(page_size)\
-                             .offset(offset)\
-                             .all()
+                             .offset(offset)
+                            #  .all()
+
+        # print_raw_sql(grouped_query)
+
+        return grouped_query.all()
 
     @classmethod
     def get_address_total_value(cls, source='', destination=''):

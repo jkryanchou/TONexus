@@ -36,6 +36,18 @@ def register_request_id(app):
     RequestID(app)
 
 
+def register_cors(app):
+
+    @app.after_request
+    def after_request(response):
+        # Ref: https://github.com/axios/axios/issues/569 using axios in front-end should set Access-Control-Allow-Origin
+        response.headers.add('Access-Control-Allow-Origin', "*")
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        response.headers.add('Access-Control-Allow-Headers', 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type')
+        return response
+
+
 def create_app():
     """
     创建APP
@@ -53,4 +65,6 @@ def create_app():
     register_db(app)
     register_error_handler(app)
     register_request_id(app)
+    register_cors(app)
+
     return app

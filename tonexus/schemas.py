@@ -1,7 +1,27 @@
 # -*- coding=utf-8 -*-
 
+import inspect
+
 from webargs import fields
 from marshmallow import Schema, validate
+
+class Constant(object):
+    @classmethod
+    def values(cls):
+        # REF: https://stackoverflow.com/questions/9058305/getting-attributes-of-a-class
+        attrs = inspect.getmembers(cls, lambda a: not (inspect.isroutine(a)))
+        return [a[1] for a in attrs if not (a[0].startswith("__") and a[0].endswith("__"))]
+
+    @classmethod
+    def items(cls):
+        attrs = inspect.getmembers(cls, lambda a: not (inspect.isroutine(a)))
+        return dict(a for a in attrs if not (a[0].startswith("__") and a[0].endswith("__")))
+
+    @classmethod
+    def keys(cls):
+        # REF: https://stackoverflow.com/questions/9058305/getting-attributes-of-a-class
+        attrs = inspect.getmembers(cls, lambda a: not (inspect.isroutine(a)))
+        return [a[0] for a in attrs if not (a[0].startswith("__") and a[0].endswith("__"))]
 
 
 # TODO: validate parameters

@@ -41,7 +41,7 @@ def list_grouped_transactions_by_msg_hash(args):
 @require_params(schemas.ListTransactionsBetweenAddresses, position="query")
 def list_transactions_between_addresses(args):
     manager = TONManager()
-    txns = manager.get_transactions_between_addresses(args["sender"], args["receiver"])
+    txns = manager.get_transactions_between_addresses(args["source"], args["destination"])
     return write_json(txns)
 
 
